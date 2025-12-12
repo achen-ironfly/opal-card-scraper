@@ -1,5 +1,8 @@
 <div class="scraper">
   <h2>Opal Scraper</h2>
+  <div *ngIf="message" class="alert" [class.error]="messageType==='error'" [class.info]="messageType==='info'">
+    {{ message }}
+  </div>
   <label>Username (email)
     <input [(ngModel)]="username" placeholder="you@example.com" />
   </label>
