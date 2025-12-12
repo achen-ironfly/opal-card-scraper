@@ -14,9 +14,10 @@
       <input [(ngModel)]="endDate" placeholder="MM-DD-YYYY or leave empty" />
     </label>
   </div>
-  <label>
-    <input type="checkbox" [(ngModel)]="showBrowser" /> Open browser during scraping
-  </label>
+  <div class="checkbox-row">
+    <input id="showBrowser" type="checkbox" [(ngModel)]="showBrowser" />
+    <label for="showBrowser">Open browser during scraping</label>
+  </div>
 
   <div style="margin-top:10px">
     <button (click)="run()" [disabled]="running">{{ running ? 'Running...' : 'Run & Download Transactions' }}</button>

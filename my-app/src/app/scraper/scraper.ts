@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectorRef, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
@@ -19,7 +19,7 @@ export class Scraper {
   showBrowser = true;
   running = false;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private cdr: ChangeDetectorRef, private zone: NgZone) {}
 
   async run() {
     if (!this.username || !this.password) {
@@ -61,7 +61,11 @@ export class Scraper {
         alert('Request failed: ' + (e?.message || e));
       }
     } finally {
-      this.running = false;
+      // Ensure UI updates even if outside Angular zone (e.g., after file download)
+      this.zone.run(() => {
+        this.running = false;
+        this.cdr.detectChanges();
+      });
     }
   }
 }
