@@ -329,7 +329,7 @@ export async function getTransactions(
             if (href.includes("tp_train")) return "train";
             if (href.includes("tp_ferry")) return "ferry";
             if (href.includes("tp_metro")) return "metro";
-            if (href.includes("tp_light-rail")) return "light-rail";
+            if (href.includes("tp_lightrail")) return "lightrail";
         }
         return null;
     }
