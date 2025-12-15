@@ -41,20 +41,58 @@
 .table-container tbody tr:nth-child(even) {
 	background: #f7f7f7;
 }
-.pager span { font-size: 12px; }
-.pager button { font-size: 12px; }
-.scraper { max-width:720px; margin:16px auto; font-family: Arial, Helvetica, sans-serif }
-.scraper h2 { text-align:center; margin: 0 0 12px; }
-.scraper .alert { padding:10px; border-radius:4px; margin-bottom:10px; font-size:14px }
-.scraper .alert.info { background:#e8f2ff; color:#0b5ea8; border:1px solid #b8d4ff }
-.scraper .alert.error { background:#ffecec; color:#a80b0b; border:1px solid #ffb8b8 }
-.scraper label { display:block; margin-top:8px }
-.scraper input { padding:8px; width:100%; box-sizing:border-box }
-.scraper .row { display:flex; gap:12px }
-.scraper .row > label { flex:1 }
-button[disabled] { opacity:0.6 }
+.pager span { 
+	font-size: 12px; 
+}
+.pager button { 
+	font-size: 12px; 
+}
+.scraper { 
+	max-width:720px; 
+	margin:16px auto; 
+	font-family: Arial, Helvetica, sans-serif 
+}
+.scraper h2 { 
+	text-align:center; 
+	margin: 0 0 12px; 
+}
+.scraper .alert { 
+	padding:10px; 
+	border-radius:4px; 
+	margin-bottom:10px; 
+	font-size:14px 
+}
+.scraper .alert.info { 
+	background:#e8f2ff; 
+	color:#0b5ea8; 
+	border:1px solid #b8d4ff 
+}
+.scraper .alert.error { 
+	background:#ffecec; 
+	color:#a80b0b; 
+	border:1px solid #ffb8b8 
+}
+.scraper label { 
+	display:block; 
+	margin-top:8px
+}
+.scraper input { 
+	padding:8px; 
+	width:100%; 
+	box-sizing:border-box 
+}
+.scraper .row { 
+	display:flex;
+	gap:12px 
+}
+.scraper .row > label { 
+	flex:1 
+}
+button[disabled] { 
+	opacity:0.6 
+}
 
-/* Keep checkbox and its hint on the same line and vertically centered */
+/* Style for Checkbox */
 .scraper .checkbox-row {
 	display: flex;
 	align-items: center;
@@ -70,8 +108,6 @@ button[disabled] { opacity:0.6 }
 .scraper .checkbox-row label {
 	display: inline;
 }
-
-/* Prevent checkbox hint from wrapping to multiple lines; show ellipsis if too long */
 .scraper .checkbox-row {
 	white-space: nowrap;
 }

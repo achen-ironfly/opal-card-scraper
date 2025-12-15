@@ -24,8 +24,6 @@ async function ask(question: string): Promise<string> {
     );
 }
 
-// (Merged behavior) use `ask()` which already exits on 'q'
-
 /**
  * Ask for username + password + startDate + endDate
  */
