@@ -23,6 +23,10 @@ export class Scraper {
   previewRows: Array<Record<string, any>> = [];
   tableError: string | null = null;
 
+  // Pagination
+  pageSize = 10;
+  currentPage = 1;
+
   progressPercent = 0;
   progressMessage: string | null = null;
   private eventSource: EventSource | null = null;
@@ -223,6 +227,7 @@ export class Scraper {
 
       this.previewColumns = desiredColumns;
       this.previewRows = processed;
+      this.currentPage = 1;
       this.tableError = null;
       this.cdr.detectChanges();
     } catch (err: any) {
@@ -275,6 +280,7 @@ export class Scraper {
       }
       this.previewColumns = Array.from(keySet);
       this.previewRows = rows;
+      this.currentPage = 1;
       this.cdr.detectChanges();
     } catch (err: any) {
       this.tableError = 'Failed to load JSON: ' + (err?.message || String(err));
@@ -288,4 +294,25 @@ export class Scraper {
     }
     return String(v);
   }
+
+  // Computed: rows for current page
+  get pagedRows(): Array<Record<string, any>> {
+    const start = (this.currentPage - 1) * this.pageSize;
+    return this.previewRows.slice(start, start + this.pageSize);
+  }
+
+  get totalPages(): number {
+    return Math.max(1, Math.ceil(this.previewRows.length / this.pageSize || 1));
+  }
+
+  goToPage(p: number) {
+    const clamped = Math.min(Math.max(1, p), this.totalPages);
+    if (clamped !== this.currentPage) {
+      this.currentPage = clamped;
+      this.cdr.detectChanges();
+    }
+  }
+
+  nextPage() { this.goToPage(this.currentPage + 1); }
+  prevPage() { this.goToPage(this.currentPage - 1); }
 }
