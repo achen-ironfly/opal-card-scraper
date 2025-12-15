@@ -42,6 +42,7 @@
 	background: #f7f7f7;
 }
 .scraper { max-width:720px; margin:16px auto; font-family: Arial, Helvetica, sans-serif }
+.scraper h2 { text-align:center; margin: 0 0 12px; }
 .scraper .alert { padding:10px; border-radius:4px; margin-bottom:10px; font-size:14px }
 .scraper .alert.info { background:#e8f2ff; color:#0b5ea8; border:1px solid #b8d4ff }
 .scraper .alert.error { background:#ffecec; color:#a80b0b; border:1px solid #ffb8b8 }
