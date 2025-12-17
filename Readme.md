@@ -83,14 +83,18 @@ Invoke-WebRequest -Method Post `
 
 ### GET `/api/transactions`
 
+1. Get all transactions
 ```powershell
 Invoke-WebRequest -Method Get -Uri "http://localhost:8080/api/transactions"
-
+```
+2. Get transactions with mode
+```powershell
 Invoke-WebRequest -Method Get -Uri "http://localhost:8080/api/transactions?mode=bus"
-Invoke-WebRequest -Uri "http://localhost:8080/api/transactions?mode=lightrail" -OutFile transactions.json
+```
 
+3. Get transactions by accountId, the response will be saved to a JSON file.
+```powershell
 Invoke-WebRequest -Uri "http://localhost:8080/api/transactions?accountId=3085%202204%201089%208809" -OutFile transactions.json
-
 ```
 
 ### Query Parameters
@@ -106,8 +110,3 @@ Invoke-WebRequest -Uri "http://localhost:8080/api/transactions?accountId=3085%20
 
 ## Disclaimer
 This tool automates browsing of the NSW Opal website for personal use only. Ensure usage complies with Opal's terms and conditions.
-
-
-
-Invoke-WebRequest -Method Get -Uri "http://localhost:8080/api/transactions?startDate=8-22-2024&endDate="
-Invoke-WebRequest -Uri "http://localhost:8080/api/transactions?startDate=8-22-2024&endDate=" -OutFile transactions.json

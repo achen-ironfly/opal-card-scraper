@@ -31,6 +31,18 @@ export class Scraper {
   // Pagination
   pageSize = 10;
   currentPage = 1;
+  // Reused columns
+  private readonly columns = [
+    'time_local',
+    'quantity',
+    'currency',
+    'accountId',
+    'mode',
+    'tap_on_location',
+    'tap_off_location',
+    'status',
+    'bankImportedBalance'
+  ];
 
   // Server-Sent Events (SSE)
   private eventSource: EventSource | null = null;
@@ -97,8 +109,7 @@ export class Scraper {
     const yyyy = +match[3];
 
     const date = new Date(yyyy, mm - 1, dd);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const today = new Date(new Date().setHours(0, 0, 0, 0));
 
     // Check for invalid date values
     if (
@@ -117,9 +128,8 @@ export class Scraper {
     }
 
     // Return normalized MM-DD-YYYY format
-    return `${mm.toString().padStart(2, '0')}-${dd
-      .toString()
-      .padStart(2, '0')}-${yyyy}`;
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    return `${pad(mm)}-${pad(dd)}-${yyyy}`;
   }
 
   // Start scraping process
@@ -133,24 +143,19 @@ export class Scraper {
     const params = new URLSearchParams({
       username: this.username.trim(),
       password: this.password,
-      showBrowser: String(this.showBrowser)
-    });
-
-    if (this.startDate) params.set('startDate', this.startDate);
-    if (this.endDate) params.set('endDate', this.endDate);
-
-    return `/api/scrape/stream?${params.toString()}`;
+      showBrowser: String(this.showBrowser),
+      ...(this.startDate ? { startDate: this.startDate } : {}),
+      ...(this.endDate ? { endDate: this.endDate } : {})
+    } as any);
+    return '/api/scrape/stream?' + params.toString();
   }
 
   // Initialize SSE connection
   private initEventSource(url: string) {
     this.eventSource = new EventSource(url);
 
-    this.eventSource.onmessage = evt =>
-      this.zone.run(() => this.handleSseMessage(evt));
-
-    this.eventSource.onerror = () =>
-      this.zone.run(() => this.handleSseError());
+    this.eventSource.onmessage = evt => this.zone.run(() => this.handleSseMessage(evt));
+    this.eventSource.onerror = () => this.zone.run(() => this.handleSseError());
   }
 
   // Handle SSE messages
@@ -210,31 +215,15 @@ export class Scraper {
 
   // Process transaction data and table display
   private processTransactionData(data: any) {
-    const rows: any[] = Array.isArray(data)
-      ? data
-      : data?.transactions ?? [];
+    const rows: any[] = Array.isArray(data) ? data : data?.transactions ?? [];
 
     if (!rows.length) {
       this.tableError = 'No transactions found.';
       return;
     }
 
-    const columns = [
-      'time_local',
-      'quantity',
-      'currency',
-      'accountId',
-      'mode',
-      'tap_on_location',
-      'tap_off_location',
-      'status',
-      'bankImportedBalance'
-    ];
-
-    this.previewColumns = columns;
-    this.previewRows = rows.map(row =>
-      Object.fromEntries(columns.map(c => [c, row[c]]))
-    );
+    this.previewColumns = this.columns;
+    this.previewRows = rows.map(row => Object.fromEntries(this.columns.map(c => [c, row[c]])));
 
     this.currentPage = 1;
     this.tableError = null;
@@ -271,9 +260,7 @@ export class Scraper {
 
   // Table for display
   formatCell(value: any): string {
-    if (value == null) return '';
-    if (typeof value === 'object') return JSON.stringify(value);
-    return String(value);
+    return value == null ? '' : (typeof value === 'object' ? JSON.stringify(value) : String(value));
   }
 
   // Pagination
