@@ -78,8 +78,8 @@ The script returns the same transaction array for programmatic use.
 $body = @{
   username = "xxx@xxx.com"
   password = "xxxxxx"
-  startDate = ""
-  endDate = ""
+  startDate = "MM-DD-YYYY" #or leave empty
+  endDate = "MM-DD-YYYY" #or leave empty
   showBrowser = $false
 } | ConvertTo-Json
 
