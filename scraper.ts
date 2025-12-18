@@ -225,6 +225,63 @@ export async function login(username: string, password: string, showBrowser: boo
 }
 
 /**
+ * Get Opal cards as accounts
+ */
+export async function getAccounts(context: BrowserContext): Promise<any[]> {
+    const page = context.pages()[0];
+    await page.goto("https://transportnsw.info/opal-view/#/account/cards", {
+        waitUntil: "networkidle"
+    });
+
+    await page.waitForSelector('.opal-selector__item', { timeout: 5000 });
+
+    const cards = await page.$$('.opal-selector__item');
+    const accounts: any[] = [];
+
+    for (const el of cards) {
+        const text = (await el.innerText()).trim();
+        if (!text || text.toLowerCase().includes("link card")) continue;
+
+        let cardId: string | null = null;
+        const name = await el.$('h3.opal-selector__card-name');
+        if (name) {
+            const aria = await name.getAttribute('aria-label');
+            if (aria && aria.trim()) {
+                cardId = aria.trim();
+            } else {
+                const inner = (await name.innerText())?.trim();
+                if (inner) cardId = inner;
+            }
+        }
+        if (!cardId) {
+            cardId = text.split("\n")[0].trim();
+        }
+
+        const classAttr = (await el.getAttribute('class')) || '';
+        const blocked = text.toLowerCase().includes("blocked") || classAttr.toLowerCase().includes('blocked');
+
+        // balance
+        let balance: number | null = null;
+        const balanceEl = await el.$('.opal-selector__card-value');
+        if (balanceEl) {
+            const raw = (await balanceEl.innerText()).replace("$", "").trim();
+            const parsed = parseFloat(raw);
+            if (!isNaN(parsed)) balance = parsed;
+        }
+
+        accounts.push({
+            accountId: cardId,
+            balance,
+            currency: "AUD",
+            blocked
+        });
+    }
+
+    return accounts;
+}
+
+
+/**
  * Get transactions for each card by month between startDate and endDate
  */
 export async function getTransactions(
