@@ -107,11 +107,9 @@ export class Scraper {
     const mm = +match[1];
     const dd = +match[2];
     const yyyy = +match[3];
-
     const date = new Date(yyyy, mm - 1, dd);
     const today = new Date(new Date().setHours(0, 0, 0, 0));
 
-    // Check for invalid date values
     if (
       date.getFullYear() !== yyyy ||
       date.getMonth() !== mm - 1 ||
@@ -120,14 +118,10 @@ export class Scraper {
       this.showMessage(`${label} is not a valid date`, 'error');
       return false;
     }
-
-    // Prevent future dates
     if (date > today) {
       this.showMessage(`${label} cannot be in the future`, 'error');
       return false;
     }
-
-    // Return normalized MM-DD-YYYY format
     const pad = (n: number) => n.toString().padStart(2, '0');
     return `${pad(mm)}-${pad(dd)}-${yyyy}`;
   }

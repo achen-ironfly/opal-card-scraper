@@ -30,22 +30,31 @@ This project provides a Playwright-based scraper that logs into the NSW Opal web
 - Node.js 18+
 - Playwright
 - Luxon
+- Angular
 
 Install dependencies:  https://nodejs.org/
-```bash
+```powershell
 node -v 
 npm -v
 npm install typescript ts-node @types/node --save-dev
 npm install playwright
 npm install luxon
+npm install -g @angular/cli
 ```
 
 ## Usage
-Run the scraper:
-```bash
-npm run dev
+### Start Backend
+Ensure you are in opal-card root:
+```powershell
+npm run serve
 ```
-You will be prompted for login info(email, password) and date range(strat date, end date).
+
+### Start Frontend
+```powershell
+cd my-app
+npx ng serve --proxy-config proxy.conf.json
+```
+The app will be available at `http://localhost:4200`.
 
 ### Output
 The scraper writes a JSON file to the working directory. Examples:
@@ -94,7 +103,7 @@ Invoke-WebRequest -Method Get -Uri "http://localhost:8080/api/transactions?mode=
 
 3. Get transactions by accountId, the response will be saved to a JSON file.
 ```powershell
-Invoke-WebRequest -Uri "http://localhost:8080/api/transactions?accountId=3085%202204%201089%208809" -OutFile transactions.json
+Invoke-WebRequest -Uri "http://localhost:8080/api/transactions?accountId=xxxx%20xxxx%20xxxx%20xxxx" -OutFile transactions.json
 ```
 
 ### Query Parameters

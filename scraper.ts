@@ -269,15 +269,22 @@ export async function getTransactions(
     async function extractMode(item: any) {
         const icons = await item.$$(".icons tni-icon");
         for (const icon of icons) {
-            const name = await icon.getAttribute("iconname");
-            if (name) return name;
+            const rawName = await icon.getAttribute("iconname");
+            const name = rawName ? rawName.toLowerCase() : null;
+            if (name) {
+                if (name.includes("metro")) return "train/metro"
+                if (name.includes("bus")) return "bus";
+                if (name.includes("train")) return "train/metro";
+                if (name.includes("ferry")) return "ferry";
+                if (name.includes("lightrail") || (name.includes("light") && name.includes("rail"))) return "lightrail";
+            }
             const useEl = await icon.$("use");
             const href = useEl ? await useEl.getAttribute("xlink:href") : null;
             if (!href) continue;
             if (href.includes("tp_bus")) return "bus";
             if (href.includes("tp_train")) return "train";
             if (href.includes("tp_ferry")) return "ferry";
-            if (href.includes("tp_metro")) return "metro";
+            if (href.includes("tp_metro")) continue;
             if (href.includes("tp_lightrail")) return "lightrail";
         }
         return null;
