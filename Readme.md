@@ -72,7 +72,7 @@ The script returns the same transaction array for programmatic use.
 
 ## Transactions API
 
-### POST `/api/scrape`
+### POST `/api/user`
 
 ```powershell
 $body = @{
@@ -93,12 +93,19 @@ POST /user/:userId/auth
 $body = @{ password = "yourPassword"; showBrowser = $false } | ConvertTo-Json
 Invoke-WebRequest -Method Post -Uri "http://localhost:8080/user/you%40email.com/auth" -Body $body -ContentType "application/json"
 
+#POST /user/:userId/auth
 $body = @{ password = "Caq12345678"; showBrowser = $false } | ConvertTo-Json     
-Invoke-WebRequest -Method Post -Uri "http://localhost:8080/user/anqi2022.chen%40outlook.com/auth" -Body $body -ContentType "application/json"
+Invoke-WebRequest -Method Post -Uri "http://localhost:8080/user/yourusername/auth" -Body $body -ContentType "application/json"
+#GET /user/:userId/accounts
+Invoke-WebRequest -Method Get -Uri "http://localhost:8080/user/yourusername/accounts"
+Invoke-WebRequest -Method Get -Uri "http://localhost:8080/user/yourusername/accounts/xxxx%20xxxx%20xxxx%20xxxx"
+Invoke-WebRequest -Method Get -Uri "http://localhost:8080/user/yourusername/accounts/xxxx%20xxxx%20xxxx%20xxxx"
+#GET /user/:userId/transactions
+Invoke-WebRequest -Method Get -Uri "http://localhost:8080/user/yourusername/transactions"
+Invoke-WebRequest -Method Get -Uri "http://localhost:8080/user/yourusername/account/xxxx%20xxxx%20xxxx%20xxxx/transactions"
+Invoke-WebRequest -Method Get -Uri "http://localhost:8080/user/yourusername/account/xxxx%20xxxx%20xxxx%20xxxx/transactions"
 
-Invoke-WebRequest -Method Get -Uri "http://localhost:8080/user/anqi2022.chen%40outlook.com/accounts?password=Caq12345678"
-
-
+Invoke-WebRequest -Method Get -Uri "http://localhost:8080/user/yourusername/transactions/1765040940000"
 
 ```
 
@@ -128,41 +135,6 @@ Invoke-WebRequest -Uri "http://localhost:8080/api/transactions?accountId=xxxx%20
 | `to` | End date (MM-DD-YYYY) for filtering transactions by `time_utc` | string |
 
 ---
-
-## Accounts API
-
-### GET `/user/:userId/accounts`
-
-Returns an array of the user's Opal cards as accounts.
-
-- If `password` is provided (query), the server logs in and scrapes live account data.
-- If `password` is omitted, the server derives accounts from the latest saved transactions file.
-
-Example (scrape live):
-```powershell
-Invoke-WebRequest -Method Get `
-  -Uri "http://localhost:8080/user/anqi2022.chen%40outlook.com/accounts?password=YourPassword&showBrowser=false"
-```
-
-Example (derive from saved transactions):
-```powershell
-Invoke-WebRequest -Method Get `
-  -Uri "http://localhost:8080/user/anqi2022.chen%40outlook.com/accounts"
-```
-
-Response shape:
-```json
-[
-  {
-    "accountId": "Adult Opal Card",
-    "name": "Adult Opal Card",
-    "balance": 12.34,
-    "status": "active",
-    "cardNumberMasked": "**** **** **** 1234",
-    "lastUpdated": "2025-12-18T12:34:00+11"
-  }
-]
-```
 
 ## Disclaimer
 This tool automates browsing of the NSW Opal website for personal use only. Ensure usage complies with Opal's terms and conditions.

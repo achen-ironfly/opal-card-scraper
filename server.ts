@@ -1,6 +1,5 @@
 import express from 'express';
 import path from 'path';
-import * as fs from 'fs';
 import { login, getTransactions, validateSydneyDate, getAccounts } from './scraper';
 
 const app = express();
@@ -10,27 +9,7 @@ app.use(express.json({ limit: '10mb' }));
 app.use('/', express.static(path.join(__dirname, 'my-app', 'public')));
 
 let transactionStore: any[] = [];
-
-/**
- * Read transactions function
- */
-function readTransactions(): any[] {
-    try {
-        const dir = process.cwd();
-        const files = fs.readdirSync(dir).filter(f => f.startsWith('transactions_') && f.endsWith('.json'));
-        if (files.length === 0) return [];
-        // Sort by file modified time descending
-        const withStats = files.map(f => ({ f, mtime: fs.statSync(path.join(dir, f)).mtimeMs }));
-        withStats.sort((a, b) => b.mtime - a.mtime);
-        const latestPath = path.join(dir, withStats[0].f);
-        const raw = fs.readFileSync(latestPath, 'utf8');
-        const data = JSON.parse(raw);
-        return Array.isArray(data) ? data : [];
-    } catch (e) {
-        console.error('Failed to read transactions from disk:', e);
-        return [];
-    }
-}
+const userSessions = new Map<string, { password: string; lastAuth: number }>();
 
 function fmtDateForName(d: Date | null) {
     if (!d) return '';
@@ -39,15 +18,20 @@ function fmtDateForName(d: Date | null) {
     return `${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}-${dt.getFullYear()}`;
 }
 
+function generateTransactionID(t: any) {
+    return {
+        ...t,
+        transactionId: new Date(String(t.time_utc)).getTime().toString()
+    };
+}
+
 /**
- * GET /api/transactions Method
+GET /api/transactions Method
  */
 app.get('/api/transactions', (req, res) => {
 
-    let result = readTransactions();
-    if (!result || result.length === 0) {
-        result = transactionStore || [];
-    }
+    // Serve the in-memory transaction store (real-time)
+    let result = transactionStore || [];
 
     const { accountId, mode, startDate, endDate } = req.query as Record<string, string | undefined>;
     // Validate dates 
@@ -119,6 +103,7 @@ app.get('/api/scrape/stream', async (req, res) => {
             endDate ? new Date(String(endDate)) : null,
             (p) => send({ type: 'progress', ...p }) 
         );
+        transactionStore = Array.isArray(transactions) ? transactions : [];
 
         send({ type: 'done', transactions });
         res.end();
@@ -132,14 +117,12 @@ app.get('/api/scrape/stream', async (req, res) => {
     }
 });
 
-/**
- * POST /user/:userId/auth
- */
+//POST /user/:userId/auth
 app.post('/user/:userId/auth', async (req, res) => {
     const { userId } = req.params as { userId: string };
     const { password, showBrowser } = req.body ?? {};
     if (!userId || !password) {
-        return res.status(400).json({ error: 'userId (in path) and password (in body) are required' });
+        return res.status(400).json({ error: 'userId and password are required' });
     }
 
     try {
@@ -150,6 +133,8 @@ app.post('/user/:userId/auth', async (req, res) => {
         } catch {
             try { await context.close(); } catch {}
         }
+        // Persist session so subsequent GETs can use it without password
+        userSessions.set(String(userId), { password: String(password), lastAuth: Date.now() });
         return res.status(200).json({ userId, authenticated: true });
     } catch (err: any) {
         const msg = err?.message ?? String(err);
@@ -159,16 +144,16 @@ app.post('/user/:userId/auth', async (req, res) => {
     }
 });
 
-/**
- * GET /user/:userId/accounts
- */
+//GET /user/:userId/accounts
 app.get('/user/:userId/accounts', async (req, res) => {
     const { userId } = req.params as { userId: string };
     const { password, showBrowser } = req.query;
-
-    if (!userId || !password) {
-        return res.status(400).json({
-            error: 'userId and password are required'
+    const providedPassword = typeof password === 'string' ? password : undefined;
+    const session = userSessions.get(String(userId));
+    const effectivePassword = providedPassword ?? session?.password;
+    if (!userId || !effectivePassword) {
+        return res.status(401).json({
+            error: 'Not authenticated. POST /user/:userId/auth first or provide password.'
         });
     }
 
@@ -177,7 +162,7 @@ app.get('/user/:userId/accounts', async (req, res) => {
     try {
         context = await login(
             String(userId),
-            String(password),
+            String(effectivePassword),
             showBrowser === 'true'
         );
 
@@ -199,6 +184,222 @@ app.get('/user/:userId/accounts', async (req, res) => {
             }
         } catch {}
     }
+});
+
+//GET /user/:userId/accounts/:accountId
+app.get('/user/:userId/accounts/:accountId', async (req, res) => {
+    const { userId, accountId } = req.params as { userId: string; accountId: string };
+    const { password, showBrowser } = req.query;
+    const providedPassword = typeof password === 'string' ? password : undefined;
+    const session = userSessions.get(String(userId));
+    const effectivePassword = providedPassword ?? session?.password;
+    if (!userId || !accountId || !effectivePassword) {
+        return res.status(401).json({
+            error: 'Not authenticated. POST /user/:userId/auth first or provide password.'
+        });
+    }
+
+    let context: any = null;
+
+    try {
+        context = await login(
+            String(userId),
+            String(effectivePassword),
+            showBrowser === 'true'
+        );
+
+        const accounts = await getAccounts(context);
+        const found = accounts.find((a: any) => String(a.accountId) === String(accountId));
+
+        if (!found) {
+            return res.status(404).json({ error: 'Account not found' });
+        }
+
+        return res
+            .status(200)
+            .type('application/json')
+            .send(JSON.stringify(found, null, 2));
+
+    } catch (err: any) {
+        const msg = err?.message ?? String(err);
+        if (msg === 'InvalidCredentials') {
+            return res.status(401).json({ error: 'Invalid credentials' });
+        }
+        console.error('Get account failed:', err);
+        return res.status(500).json({ error: msg });
+    } finally {
+        try {
+            if (context) {
+                const browser = context.browser();
+                await (browser ? browser.close() : context.close());
+            }
+        } catch {}
+    }
+});
+
+//GET /user/:userId/transactions
+app.get('/user/:userId/transactions', async (req, res) => {
+    const { userId } = req.params as { userId: string };
+    const { password, showBrowser, startDate, endDate } = req.query;
+
+    const providedPassword =
+        typeof password === 'string' ? password : undefined;
+
+    const session = userSessions.get(String(userId));
+    const effectivePassword = providedPassword ?? session?.password;
+
+    if (!userId || !effectivePassword) {
+        return res.status(401).json({
+            error: 'Not authenticated. POST /user/:userId/auth first or provide password.'
+        });
+    }
+
+    let sDate: Date | null = null;
+    let eDate: Date | null = null;
+
+    if (typeof startDate === 'string' && startDate.trim()) {
+        const { date, error } = validateSydneyDate(startDate, { allowFuture: true });
+        if (!date) {
+            return res.status(400).json({ error: `Invalid startDate: ${error}` });
+        }
+        sDate = date;
+    }
+
+    if (typeof endDate === 'string' && endDate.trim()) {
+        const { date, error } = validateSydneyDate(endDate, { allowFuture: true });
+        if (!date) {
+            return res.status(400).json({ error: `Invalid endDate: ${error}` });
+        }
+        eDate = date;
+    }
+
+    if (sDate && eDate && sDate > eDate) {
+        return res.status(400).json({
+            error: 'startDate must be before or equal to endDate'
+        });
+    }
+
+    let context: any = null;
+
+    try {
+        context = await login(
+            String(userId),
+            String(effectivePassword),
+            showBrowser === 'true'
+        );
+
+        const transactions = await getTransactions(context, sDate, eDate);
+        res.status(200).type('application/json').send(JSON.stringify((transactions || []).map(generateTransactionID), null, 2));
+
+    } catch (err: any) {
+        const msg = err?.message ?? String(err);
+        if (msg === 'InvalidCredentials') {
+            return res.status(401).json({ error: 'Invalid credentials' });
+        }
+        console.error('Get transactions failed:', err);
+        return res.status(500).json({ error: msg });
+    } finally {
+        try {
+            if (context) {
+                const browser = context.browser();
+                await (browser ? browser.close() : context.close());
+            }
+        } catch {}
+    }
+});
+
+//GET /user/:userId/account/:accountId/transactions
+app.get('/user/:userId/account/:accountId/transactions', async (req, res) => {
+    const { userId, accountId } = req.params as { userId: string; accountId: string };
+    const { password, showBrowser, startDate, endDate } = req.query;
+
+    const providedPassword = typeof password === 'string' ? password : undefined;
+    const session = userSessions.get(String(userId));
+    const effectivePassword = providedPassword ?? session?.password;
+
+    if (!userId || !accountId || !effectivePassword) {
+        return res.status(401).json({
+            error: 'Not authenticated. POST /user/:userId/auth first or provide password.'
+        });
+    }
+
+    let sDate: Date | null = null;
+    let eDate: Date | null = null;
+
+    if (typeof startDate === 'string' && startDate.trim()) {
+        const { date, error } = validateSydneyDate(startDate, { allowFuture: true });
+        if (!date) {
+            return res.status(400).json({ error: `Invalid startDate: ${error}` });
+        }
+        sDate = date;
+    }
+
+    if (typeof endDate === 'string' && endDate.trim()) {
+        const { date, error } = validateSydneyDate(endDate, { allowFuture: true });
+        if (!date) {
+            return res.status(400).json({ error: `Invalid endDate: ${error}` });
+        }
+        eDate = date;
+    }
+
+    if (sDate && eDate && sDate > eDate) {
+        return res.status(400).json({ error: 'startDate must be before or equal to endDate' });
+    }
+
+    let context: any = null;
+
+    try {
+        context = await login(String(userId), String(effectivePassword), showBrowser === 'true');
+
+        // Verify account exists
+        const accounts = await getAccounts(context);
+        const found = accounts.find((a: any) => String(a.accountId) === String(accountId));
+        if (!found) {
+            return res.status(404).json({ error: 'Account not found' });
+        }
+
+        const transactions = await getTransactions(context, sDate, eDate);
+        const filtered = (transactions || []).filter((t: any) => String(t.accountId) === String(accountId));
+
+        return res.status(200).type('application/json').send(JSON.stringify(filtered, null, 2));
+
+    } catch (err: any) {
+        const msg = err?.message ?? String(err);
+        if (msg === 'InvalidCredentials') {
+            return res.status(401).json({ error: 'Invalid credentials' });
+        }
+        console.error('Get account transactions failed:', err);
+        return res.status(500).json({ error: msg });
+    } finally {
+        try {
+            if (context) {
+                const browser = context.browser();
+                await (browser ? browser.close() : context.close());
+            }
+        } catch {}
+    }
+});
+
+//GET /user/:userId/transactions/:transactionId
+app.get('/user/:userId/transactions/:transactionId(\\d+)', async (req, res) => {
+    const { userId, transactionId: TransactionsID } = req.params;
+    const { password, showBrowser } = req.query;
+
+    const providedPassword = typeof password === 'string' ? password : undefined;
+    const session = userSessions.get(String(userId));
+    const effectivePassword = providedPassword ?? session?.password;
+
+    const context = await login(String(userId), String(effectivePassword), showBrowser === 'true');
+    const transactions = await getTransactions(context, null, null);
+
+    const found = (transactions || []).find(t => 
+        new Date(String(t.time_utc)).getTime().toString() === TransactionsID
+    );
+
+    if (!found) return res.status(404).json({ error: 'Transaction not found' });
+    
+    res.status(200).type('application/json').send(JSON.stringify(generateTransactionID(found), null, 2))
+
 });
 
 app.listen(PORT, () => {

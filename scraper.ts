@@ -602,9 +602,5 @@ export async function getTransactions(
         filename = `transactions_${fmtDate(startDate!)}_${fmtDate(endDate!)}.json`;
     }
 
-    // output json file
-    const outPath = path.resolve(process.cwd(), filename);
-    fs.writeFileSync(outPath, JSON.stringify(filtered, null, 2), 'utf8');
-
     return filtered;
 }
