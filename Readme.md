@@ -89,18 +89,15 @@ Invoke-WebRequest -Method Post `
   -Body $body
 
 
-POST /user/:userId/auth
+# POST /user/:userId/auth
 $body = @{ password = "yourPassword"; showBrowser = $false } | ConvertTo-Json
 Invoke-WebRequest -Method Post -Uri "http://localhost:8080/user/you%40email.com/auth" -Body $body -ContentType "application/json"
 
-#POST /user/:userId/auth
-$body = @{ password = "Caq12345678"; showBrowser = $false } | ConvertTo-Json     
-Invoke-WebRequest -Method Post -Uri "http://localhost:8080/user/yourusername/auth" -Body $body -ContentType "application/json"
-#GET /user/:userId/accounts
+# GET /user/:userId/accounts
 Invoke-WebRequest -Method Get -Uri "http://localhost:8080/user/yourusername/accounts"
 Invoke-WebRequest -Method Get -Uri "http://localhost:8080/user/yourusername/accounts/xxxx%20xxxx%20xxxx%20xxxx"
 Invoke-WebRequest -Method Get -Uri "http://localhost:8080/user/yourusername/accounts/xxxx%20xxxx%20xxxx%20xxxx"
-#GET /user/:userId/transactions
+# GET /user/:userId/transactions
 Invoke-WebRequest -Method Get -Uri "http://localhost:8080/user/yourusername/transactions"
 Invoke-WebRequest -Method Get -Uri "http://localhost:8080/user/yourusername/account/xxxx%20xxxx%20xxxx%20xxxx/transactions"
 Invoke-WebRequest -Method Get -Uri "http://localhost:8080/user/yourusername/account/xxxx%20xxxx%20xxxx%20xxxx/transactions"
