@@ -383,8 +383,8 @@ app.get('/user/:userId/transactions/:transactionId(\\d+)', async (req, res) => {
     const context = await login(String(userId), String(effectivePassword), showBrowser === 'true');
     const transactions = await getTransactions(context, null, null);
 
-    const found = (transactions || []).find(t => 
-        new Date(String(t.time_utc)).getTime().toString() === TransactionsID
+    const found = (transactions || []).find(t =>
+        Math.floor(new Date(String(t.time_utc)).getTime() / 1000).toString() === TransactionsID
     );
 
     if (!found) return res.status(404).json({ error: 'Transaction not found' });
