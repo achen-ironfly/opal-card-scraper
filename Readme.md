@@ -79,7 +79,7 @@ $body = @{ password = "yourPassword"; showBrowser = $false } | ConvertTo-Json
 Invoke-WebRequest -Method Post -Uri "http://localhost:8080/user/you%40email.com/auth" -Body $body -ContentType "application/json"
 ```
 
-### GET `GET /user/:userId`
+### GET `/user/:userId`
 
 1. GET /user/:userId/accounts
 ```powershell
