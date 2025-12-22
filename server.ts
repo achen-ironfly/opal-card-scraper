@@ -11,23 +11,14 @@ app.use('/', express.static(path.join(__dirname, 'my-app', 'public')));
 let transactionStore: any[] = [];
 const userSessions = new Map<string, { password: string; lastAuth: number }>();
 
-function fmtDateForName(d: Date | null) {
-    if (!d) return '';
-    const pad = (n: number) => n.toString().padStart(2, '0');
-    const dt = new Date(d);
-    return `${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}-${dt.getFullYear()}`;
-}
-
 function generateTransactionID(t: any) {
     return {
         ...t,
-        transactionId: new Date(String(t.time_utc)).getTime().toString()
+        transactionId: Math.floor(new Date(String(t.time_utc)).getTime() / 1000).toString()
     };
 }
 
-/**
-GET /api/transactions Method
- */
+// GET /api/transactions Method
 app.get('/api/transactions', (req, res) => {
 
     // Serve the in-memory transaction store (real-time)
@@ -360,8 +351,8 @@ app.get('/user/:userId/account/:accountId/transactions', async (req, res) => {
 
         const transactions = await getTransactions(context, sDate, eDate);
         const filtered = (transactions || []).filter((t: any) => String(t.accountId) === String(accountId));
-
-        return res.status(200).type('application/json').send(JSON.stringify(filtered, null, 2));
+        const filteredWithID = filtered.map(generateTransactionID);
+        return res.status(200).type('application/json').send(JSON.stringify(filteredWithID, null, 2));
 
     } catch (err: any) {
         const msg = err?.message ?? String(err);
@@ -405,3 +396,4 @@ app.get('/user/:userId/transactions/:transactionId(\\d+)', async (req, res) => {
 app.listen(PORT, () => {
     console.log(`Server running at http://localhost:${PORT}/scraper.html`);
 });
+

@@ -72,54 +72,40 @@ The script returns the same transaction array for programmatic use.
 
 ## Transactions API
 
-### POST `/api/user`
+### POST `/user/:userId/auth`
 
 ```powershell
-$body = @{
-  username = "xxx@xxx.com"
-  password = "xxxxxx"
-  startDate = "MM-DD-YYYY" #or leave empty
-  endDate = "MM-DD-YYYY" #or leave empty
-  showBrowser = $false
-} | ConvertTo-Json
-
-Invoke-WebRequest -Method Post `
-  -Uri "http://localhost:8080/api/scrape" `
-  -ContentType "application/json" `
-  -Body $body
-
-
-# POST /user/:userId/auth
 $body = @{ password = "yourPassword"; showBrowser = $false } | ConvertTo-Json
 Invoke-WebRequest -Method Post -Uri "http://localhost:8080/user/you%40email.com/auth" -Body $body -ContentType "application/json"
+```
 
-# GET /user/:userId/accounts
+### GET `GET /user/:userId`
+
+1. GET /user/:userId/accounts
+```powershell
 Invoke-WebRequest -Method Get -Uri "http://localhost:8080/user/yourusername/accounts"
+```
+2. GET /user/:userId/accounts/:accountId
+```powershell
 Invoke-WebRequest -Method Get -Uri "http://localhost:8080/user/yourusername/accounts/xxxx%20xxxx%20xxxx%20xxxx"
 Invoke-WebRequest -Method Get -Uri "http://localhost:8080/user/yourusername/accounts/xxxx%20xxxx%20xxxx%20xxxx"
-# GET /user/:userId/transactions
+```
+
+3. GET /user/:userId/transactions
+```powershell
 Invoke-WebRequest -Method Get -Uri "http://localhost:8080/user/yourusername/transactions"
+Invoke-WebRequest -Method Get -Uri "http://localhost:8080/user/yourusername/transactions?startDate=MM-DD-YYYY&endDate=MM-DD-YYYY"
+```
+
+4. GET /user/:userId/account/:accountId/transactions
+```powershell
 Invoke-WebRequest -Method Get -Uri "http://localhost:8080/user/yourusername/account/xxxx%20xxxx%20xxxx%20xxxx/transactions"
-Invoke-WebRequest -Method Get -Uri "http://localhost:8080/user/yourusername/account/xxxx%20xxxx%20xxxx%20xxxx/transactions"
-
-Invoke-WebRequest -Method Get -Uri "http://localhost:8080/user/yourusername/transactions/1765040940000"
-
+Invoke-WebRequest -Method Get -Uri "http://localhost:8080/user/yourusername/account/xxxx%20xxxx%20xxxx%20xxxx/transactions?startDate=MM-DD-YYYY&endDate=MM-DD-YYYY"
 ```
 
-### GET `/api/transactions`
-
-1. Get all transactions
+5. GET /user/:userId/transactions/:transactionId
 ```powershell
-Invoke-WebRequest -Method Get -Uri "http://localhost:8080/api/transactions"
-```
-2. Get transactions with mode
-```powershell
-Invoke-WebRequest -Method Get -Uri "http://localhost:8080/api/transactions?mode=bus"
-```
-
-3. Get transactions by accountId, the response will be saved to a JSON file.
-```powershell
-Invoke-WebRequest -Uri "http://localhost:8080/api/transactions?accountId=xxxx%20xxxx%20xxxx%20xxxx" -OutFile transactions.json
+Invoke-WebRequest -Method Get -Uri "http://localhost:8080/user/yourusername/transactions/xxxxxxxxxx"
 ```
 
 ### Query Parameters
