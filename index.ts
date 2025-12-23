@@ -77,7 +77,7 @@ import * as path from 'path';
         }
     }
     // Scrape transactions
-    const transactions = await getTransactions(context, startDate ?? null, endDate ?? null, (p) => {
+    const transactions = await getTransactions(context, startDate ?? null, endDate ?? null, (p: { percent: number; message?: string }) => {
         console.log(`[${p.percent}%] ${p.message ?? ''}`);
     });
 

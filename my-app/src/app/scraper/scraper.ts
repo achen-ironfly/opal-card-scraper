@@ -37,7 +37,7 @@ export class Scraper {
     'quantity',
     'currency',
     'accountId',
-    'mode',
+    'description',
     'tap_on_location',
     'tap_off_location',
     'status',

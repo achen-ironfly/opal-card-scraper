@@ -1,12 +1,8 @@
 import { chromium, BrowserContext } from 'playwright';
 import * as readline from 'readline';
 import { DateTime } from "luxon";
-import * as fs from 'fs';
-import * as path from 'path';
 
-/**
- * Helper: prompt input
- */
+// Helper: prompt input
 async function ask(question: string): Promise<string> {
     const rl = readline.createInterface({
         input: process.stdin,
@@ -24,9 +20,7 @@ async function ask(question: string): Promise<string> {
     );
 }
 
-/**
- * Validate a date string in MM-DD-YYYY
- */
+// Validate a date string in MM-DD-YYYY
 export function validateSydneyDate(
     dateStr: string,
     opts: { allowFuture?: boolean } = {}
@@ -53,9 +47,7 @@ export function validateSydneyDate(
     return { date: dt.toJSDate() };
 }
 
-/**
- * Ask for username + password + startDate + endDate
- */
+// Ask for username + password + startDate + endDate
 export async function DateRange(): Promise<{
     username: string;
     password: string;
@@ -112,9 +104,7 @@ export async function DateRange(): Promise<{
     return { username, password, startDate, endDate, showBrowser };
 }
 
-/**
- * Export a small helper can re-prompt credentials on login failure
- */
+// Export a small helper can re-prompt credentials on login failure
 export async function askCredentials(): Promise<{ username: string; password: string }> {
     console.log("(Type 'q' at any prompt to quit)");
     const username = await ask("Enter username (email): ");
@@ -122,9 +112,7 @@ export async function askCredentials(): Promise<{ username: string; password: st
     return { username, password };
 }
 
-/**
- * Filter results based on date range
- */
+// Filter results based on date range
 function filterByDateRange(
     results: any[],
     startDate: Date | null,
@@ -155,9 +143,7 @@ function filterByDateRange(
     });
 }
 
-/**
- * Login using username + password
- */
+// Login using username + password
 export async function login(username: string, password: string, showBrowser: boolean): Promise<BrowserContext> {
     let browser: any = null;
     try {
@@ -224,9 +210,7 @@ export async function login(username: string, password: string, showBrowser: boo
     }
 }
 
-/**
- * Get Opal cards as accounts
- */
+// Get Opal cards as accounts
 export async function getAccounts(context: BrowserContext): Promise<any[]> {
     const page = context.pages()[0];
     await page.goto("https://transportnsw.info/opal-view/#/account/cards", {
@@ -281,9 +265,7 @@ export async function getAccounts(context: BrowserContext): Promise<any[]> {
 }
 
 
-/**
- * Get transactions for each card by month between startDate and endDate
- */
+// Get transactions for each card by month between startDate and endDate
 export async function getTransactions(
     context: BrowserContext,
     startDate: Date | null,
@@ -545,10 +527,12 @@ export async function getTransactions(
                 const items = await block.$$("tni-card-activity .card-activity-item");
                 for (const item of items) {
                     const timeText = await getText(item, ".date");
-                    const description = await getText(item, ".description");
+                    const rawDescription = await getText(item, ".description");
                     const amountText = await getText(item, ".amount");
-                    const { quantity, currency } = parseAmount(amountText, description);
-                    const mode = await extractMode(item);
+                    const { quantity, currency } = parseAmount(amountText, rawDescription);
+                    // Prefer the extracted transport mode; fallback to the raw description text
+                    const extractedMode = await extractMode(item);
+                    const description = extractedMode || rawDescription;
                     const tap_on_location = await getText(item, ".from");
                     const tap_off_location = tap_on_location ? await getText(item, ".to") : null;
                     const { time_local, time_utc } = convertTimes(parsedDate, timeText);
@@ -569,7 +553,6 @@ export async function getTransactions(
                         quantity,
                         currency,
                         accountId: card.name,
-                        mode,
                         description,
                         tap_on_location,
                         tap_off_location,

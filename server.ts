@@ -24,7 +24,7 @@ app.get('/api/transactions', (req, res) => {
     // Serve the in-memory transaction store (real-time)
     let result = transactionStore || [];
 
-    const { accountId, mode, startDate, endDate } = req.query as Record<string, string | undefined>;
+    const { accountId, description, startDate, endDate } = req.query as Record<string, string | undefined>;
     // Validate dates 
     let sDate: Date | null = null;
     let eDate: Date | null = null;
@@ -50,8 +50,8 @@ app.get('/api/transactions', (req, res) => {
         result = result.filter((t: any) => String(t.accountId) === String(accountId));
     }
 
-    if (mode) {
-        result = result.filter((t: any) => String(t.mode) === String(mode));
+    if (description) {
+        result = result.filter((t: any) => String(t.description) === String(description));
     }
 
     if (sDate) {
@@ -92,7 +92,7 @@ app.get('/api/scrape/stream', async (req, res) => {
             context,
             startDate ? new Date(String(startDate)) : null,
             endDate ? new Date(String(endDate)) : null,
-            (p) => send({ type: 'progress', ...p }) 
+            (p: { percent: number; message?: string }) => send({ type: 'progress', ...p })
         );
         transactionStore = Array.isArray(transactions) ? transactions : [];
 
