@@ -16,8 +16,6 @@ This project provides a Playwright-based scraper that logs into the NSW Opal web
   - tap_off_location
   - status
   - bankImportedBalance
-- Result filtering and JSON export
-- Output filename automatically reflects selected date range
 
 ## Requirements
 - Node.js 18+
@@ -78,7 +76,7 @@ mutation {
 **Parameters:**
 - `userId` : The user's ID
 - `password` : The user's password
-- `showBrowser` : Whether to display the browser window during authentication (default: false)
+- `showBrowser` : Whether to display the browser window during authentication (default: true)
 
 **Response Example:**
 ```json
@@ -193,19 +191,9 @@ query {
 - `transactionId` : Filter by specific transaction ID
 
 
-### Backend Output
-The scraper writes a JSON file to the working directory. Examples:
-- `transactions_MM-DD-YYYY_MM-DD-YYYY.json`
-- `transactions_earliest-latest.json`
-- `transactions_earliest_MM-DD-YYYY.json`
-- `transactions_MM-DD-YYYY_latest.json`
-
-The script returns the same transaction array for programmatic use.
-
 ## File Structure
 - `scraper.ts` – Login, scraping logic, date filtering, JSON output
 - `index.ts` – CLI entrypoint (prompts user, calls scraper)
-
 
 ## Transactions rest API
 
