@@ -1,0 +1,64 @@
+schema {
+  query: Query
+  mutation: Mutation
+}
+
+type Query {
+
+  accounts(
+    userId: ID!
+  ): [Account!]!
+
+  account(
+    userId: ID!
+    accountId: ID!
+  ): Account
+
+  transactions(
+    userId: ID!
+    startDate: String
+    endDate: String
+    accountId: ID
+  ): [Transaction!]!
+
+  transaction(
+    userId: ID!
+    transactionId: ID!
+  ): Transaction
+}
+
+type Mutation {
+
+  authenticate(
+    userId: ID!
+    password: String!
+    showBrowser: Boolean
+  ): AuthResult!
+}
+
+type AuthResult {
+  userId: ID!
+  authenticated: Boolean!
+}
+
+type Account {
+  accountId: ID!
+  balance: Float
+  currency: String!
+  blocked: Boolean
+}
+
+type Transaction {
+  transactionDate: String
+  time_local: String
+  time_utc: String
+  quantity: Float
+  currency: String!
+  accountId: ID!
+  description: String
+  tap_on_location: String
+  tap_off_location: String
+  status: String
+  bankImportedBalance: String
+  transactionId: ID!
+}
