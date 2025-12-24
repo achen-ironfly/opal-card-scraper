@@ -3,13 +3,6 @@
 This project provides a Playwright-based scraper that logs into the NSW Opal website, filters transactions by date range, and exports them to JSON file.
 
 ## Features
-- Interactive CLI prompts for:
-  - Username (email)
-  - Password
-  - Start date (MM-DD-YYYY or press Enter for earliest)
-  - End date (MM-DD-YYYY or press Enter for today)
-  - Open browser to show process? (y/n):         
-
 - Scrapes:
   - transactionDate
   - time_local
@@ -31,6 +24,7 @@ This project provides a Playwright-based scraper that logs into the NSW Opal web
 - Playwright
 - Luxon
 - Angular
+- grapgQL
 
 Install dependencies:  https://nodejs.org/
 ```powershell
@@ -40,6 +34,8 @@ npm install typescript ts-node @types/node --save-dev
 npm install playwright
 npm install luxon
 npm install -g @angular/cli
+npm install graphql @apollo/server graphql-tag
+npm install @apollo/server express
 ```
 
 ## Usage
