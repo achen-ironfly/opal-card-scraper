@@ -5,14 +5,13 @@ schema {
 
 type Query {
 
-  accounts(
-    userId: ID!
-  ): [Account!]!
+  Account(id: String): [account]
+  Transaction(id: String): [transaction]
 
   account(
     userId: ID!
     accountId: ID!
-  ): Account
+  ): account
 
   transactions(
     userId: ID!
@@ -41,11 +40,21 @@ type AuthResult {
   authenticated: Boolean!
 }
 
-type Account {
-  accountId: ID!
-  balance: Float
-  currency: String!
-  blocked: Boolean
+type account {
+    id: String
+    name: String
+    balance: Float
+    currency: String
+}
+
+type transaction {
+    transactionId: ID
+    transactionTime: String
+    amount: Float
+    currency: String
+    description: String
+    status: String
+    balance: Float
 }
 
 type Transaction {

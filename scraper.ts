@@ -254,10 +254,10 @@ export async function getAccounts(context: BrowserContext): Promise<any[]> {
         }
 
         accounts.push({
-            accountId: cardId,
+            id: cardId,
+            name: null,
             balance,
-            currency: "AUD",
-            blocked
+            currency: "AUD"
         });
     }
 
@@ -274,7 +274,9 @@ export async function getTransactions(
 ): Promise<any[]> {
 
     const page = context.pages()[0];
+    console.log('getTransactions: Starting...');
     await page.goto("https://transportnsw.info/opal-view/#/account/cards", { waitUntil: "networkidle" });
+    console.log('getTransactions: Page loaded');
 
     const results: any[] = [];
     const pad = (n: number) => n.toString().padStart(2, "0");
@@ -357,6 +359,7 @@ export async function getTransactions(
     // -------------------- collect cards --------------------
     await page.waitForSelector('.opal-selector__item', { timeout: 1000 });
     const cardEls = await page.$$('.opal-selector__item');
+    console.log(`getTransactions: Found ${cardEls.length} card elements`);
     const cards = [];
     for (const el of cardEls) {
         const text = (await el.innerText()).trim();
@@ -364,11 +367,13 @@ export async function getTransactions(
         const blocked = text.toLowerCase().includes("blocked");
         cards.push({ element: el, blocked, name: text.split("\n")[0].trim() });
     }
+    console.log(`getTransactions: Found ${cards.length} valid cards (non-blocked)`);
 
     // -------------------- month selector --------------------
     const monthSelector = await page.$('select.month-view-selector');
     if (!monthSelector) throw new Error("Month selector not found");
     const monthOptions = await monthSelector.$$('option');
+    console.log(`getTransactions: Found ${monthOptions.length} month options`);
 
     // Parse month labels into {label, value, month, year}
     const monthNameMap: { [k: string]: number } = {
@@ -546,18 +551,19 @@ export async function getTransactions(
                         runningBalance = runningBalance - quantity;
                     }
 
+                    const transactionId = Math.floor(
+                        new Date(String(time_utc)).getTime() / 1000
+                    ).toString();
+
                     results.push({
-                        transactionDate,
-                        time_local,
-                        time_utc,
-                        quantity,
+                        transactionId,
+                        transactionTime: time_utc,
+                        amount: quantity,
                         currency,
-                        accountId: card.name,
                         description,
-                        tap_on_location,
-                        tap_off_location,
                         status: quantity !== 0 ? "posted" : "pending",
-                        bankImportedBalance
+                        balance: bankImportedBalance,
+                        transactionDate
                     });
                 }
             }
@@ -572,6 +578,7 @@ export async function getTransactions(
     }
     // -------------------- DATE FILTER --------------------
     const filtered = filterByDateRange(results, startDate, endDate);
+    console.log(`getTransactions: Returning ${filtered.length} transactions after filtering`);
 
     // Determine output filename based on provided date boundaries
     let filename: string;

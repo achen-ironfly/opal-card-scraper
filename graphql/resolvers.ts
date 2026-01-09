@@ -37,13 +37,37 @@ export const resolvers = {
   },  
 
   Query: {
-    accounts: async (_: any, { userId }: any) => {
-      const context = sessions[userId];
+    Account: async (_: any, { id }: any) => {
+      const context = sessions[id];
       if (!context) {
         throw new Error('User not authenticated.');
       }
       try {
-        return await getAccounts(context);
+        const accounts = await getAccounts(context);
+        return accounts;
+      } catch (err) {
+        console.error(err);
+        return [];
+      }
+    },
+
+    Transaction: async (_: any, { id }: any) => {
+      const context = sessions[id];
+      if (!context) {
+        throw new Error('User not authenticated.');
+      }
+      try {
+        const transactions = await getTransactions(context, null, null);
+        // Remove internal fields that are not part of the schema
+        return (transactions || []).map((t: any) => ({
+          transactionId: t.transactionId,
+          transactionTime: t.transactionTime,
+          amount: t.amount,
+          currency: t.currency,
+          description: t.description,
+          status: t.status,
+          balance: t.balance
+        }));
       } catch (err) {
         console.error(err);
         return [];
@@ -60,7 +84,8 @@ export const resolvers = {
         if (!accounts || accounts.length === 0) {
           return null;
         }
-        return accounts.find((a: any) => String(a.accountId) === String(accountId)) || null;
+        const account = accounts.find((a: any) => String(a.id) === String(accountId));
+        return account || null;
       } catch (err) {
         console.error(err);
         return null;
@@ -117,5 +142,8 @@ export const resolvers = {
         return null;
       }
     },
+
+
+
   }
 };
