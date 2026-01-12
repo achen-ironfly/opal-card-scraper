@@ -537,10 +537,19 @@ export async function getTransactions(
                     const { quantity, currency } = parseAmount(amountText, rawDescription);
                     // Prefer the extracted transport mode; fallback to the raw description text
                     const extractedMode = await extractMode(item);
-                    const description = extractedMode || rawDescription;
+                    let description = extractedMode || rawDescription;
                     const tap_on_location = await getText(item, ".from");
                     const tap_off_location = tap_on_location ? await getText(item, ".to") : null;
                     const { time_local, time_utc } = convertTimes(parsedDate, timeText);
+
+                    // Append location information to description
+                    if (tap_on_location) {
+                        description += ` (from: ${tap_on_location}`;
+                        if (tap_off_location) {
+                            description += ` to: ${tap_off_location}`;
+                        }
+                        description += ')';
+                    }
 
                     // ---------------- bankImportedBalance ----------------
                     let bankImportedBalance: string | null = null;
@@ -561,7 +570,7 @@ export async function getTransactions(
                         amount: quantity,
                         currency,
                         description,
-                        status: quantity !== 0 ? "posted" : "pending",
+                        status: quantity != null ? "posted" : "pending",
                         balance: bankImportedBalance,
                         transactionDate
                     });
