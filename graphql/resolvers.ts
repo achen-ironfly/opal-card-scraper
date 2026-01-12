@@ -3,30 +3,27 @@ import { login, getAccounts, getTransactions } from '../scraper';
 const sessions: Record<string, any> = {};
 export const resolvers = {
     Mutation: {
-        authenticate: async (_: any, { userId, password, showBrowser }: any) => {
-            try {
-                const context = await login(userId, password, !!showBrowser);
-                const isAuthenticated = !!context;
+        authenticate: async (_: any, { id, password }: any) => {
+            const context = await login(id, password, false);
+            const isAuthenticated = !!context;
 
-                if (isAuthenticated) {
-                  sessions[userId] = context;
-              }
+            if (isAuthenticated) {
+                sessions[id] = context;
+                const page = context.pages()[0];
+                const currentUrl = page.url();
                 return {
-                    userId,
-                    authenticated: isAuthenticated
-              };
-            } catch (err) {
-                console.error(err);
-                return {
-                    userId,
-                    authenticated: false
+                    message: "authenticated true",
+                    url: currentUrl
                 };
-            }
-        }
-    },  
-
+              }
+            return {
+                message: "authenticated false",
+                url: null
+            };
+        } 
+    },
     Query: {
-        Account: async (_: any, { id }: any) => {
+        account: async (_: any, { id }: any) => {
             const context = sessions[id];
             if (!context) {
                 throw new Error('User not authenticated.');
@@ -40,7 +37,7 @@ export const resolvers = {
             }
         },
 
-        Transaction: async (_: any, { id }: any) => {
+        transaction: async (_: any, { id }: any) => {
             const context = sessions[id];
             if (!context) {
                 throw new Error('User not authenticated.');
