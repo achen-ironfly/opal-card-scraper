@@ -63,12 +63,12 @@ Before using any queries, first call the `authenticate` mutation to establish a 
 ```graphql
 mutation {
     authenticate(
-        userId: "user123", 
-        password: "yourPassword", 
-        showBrowser: true) 
+        id: "user123",
+        password:"yourPassword"
+        ) 
         {
-            userId
-            authenticated
+            message
+            url
         }
 }
 ```
@@ -83,8 +83,8 @@ mutation {
 {
     "data": {
         "authenticate": {
-            "userId": "user123",
-            "authenticated": true
+            "message": "authenticated true",
+            "url": "https://transportnsw.info/xxxxxx"
         }
     }
 }
