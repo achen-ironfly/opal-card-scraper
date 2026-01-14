@@ -62,13 +62,13 @@ Before using any queries, first call the `authenticate` mutation to establish a 
 
 ```graphql
 mutation {
-    authenticate(
-        id: "user123",
-        password:"yourPassword"
+    auth(payload: { 
+            id: "user123",
+            password:"yourPassword"}
         ) 
         {
-            message
-            url
+            response
+            identifier
         }
 }
 ```
@@ -82,9 +82,9 @@ mutation {
 ```json
 {
     "data": {
-        "authenticate": {
-            "message": "authenticated true",
-            "url": "https://transportnsw.info/xxxxxx"
+        "auth": {
+            "response": "https://transportnsw.info/xxxxxx",
+            "identifier": "authenticated true"
         }
     }
 }
@@ -98,7 +98,7 @@ Retrieve all accounts for an authenticated user.
 
 ```graphql
 query {
-    Account(id: "user123") {
+    account(identifier: "user123") {
         id
         name
         currency
@@ -108,7 +108,7 @@ query {
 ```
 
 **Parameters:**
-- `id` : The authenticated user's ID
+- `identifier` : The authenticated user's ID
 
 ### Get Transactions
 
@@ -116,7 +116,7 @@ Retrieve transactions with optional filtering by date range and account.
 
 ```graphql
 query {
-    Transaction(id: "user123") {
+    transaction(identifier: "user123") {
         transactionId
         transactionTime
         amount
@@ -129,7 +129,7 @@ query {
 ```
 
 **Parameters:**
-- `id` : The authenticated user's ID
+- `identifier` : The authenticated user's ID
 
 ## File Structure
 - `scraper.ts` – Login, scraping logic, date filtering, JSON output

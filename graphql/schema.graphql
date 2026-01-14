@@ -1,18 +1,8 @@
-type Mutation {
-    authenticate(
-        id: String
-        password: String
-    ): Authresponse
-}
+scalar JSON
 
-type Authresponse {
-    message: String
-    url: String
-}
-
-type Query {
-    account(id: String): [Account]
-    transaction(id: String): [Transaction]
+type Auth {
+    response: String
+    identifier: String
 }
 
 type Transaction {
@@ -30,4 +20,13 @@ type Account {
     name: String
     balance: Float
     currency: String
+}
+
+type Mutation {
+    auth(payload: JSON): Auth
+}
+
+type Query {
+    account(identifier: String): [Account]
+    transaction(identifier: String): [Transaction]
 }

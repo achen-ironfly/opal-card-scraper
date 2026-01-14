@@ -3,28 +3,39 @@ import { login, getAccounts, getTransactions } from '../scraper';
 const sessions: Record<string, any> = {};
 export const resolvers = {
     Mutation: {
-        authenticate: async (_: any, { id, password }: any) => {
-            const context = await login(id, password, false);
-            const isAuthenticated = !!context;
+        auth: async (_: any, { payload }: any) => {
 
-            if (isAuthenticated) {
-                sessions[id] = context;
-                const page = context.pages()[0];
-                const currentUrl = page.url();
+                const { id, password } = payload || {};               
+                if (!id || !password) {
+                    return {
+                        response: JSON.stringify({
+                            message: "authentication failed",
+                            error: "Missing id or password"
+                        }),
+                        identifier: null
+                    };
+                }
+
+                const context = await login(id, password, false);
+                const isAuthenticated = !!context;
+                if (isAuthenticated) {
+                    sessions[id] = context;
+                    const page = context.pages()[0];
+                    const currentUrl = page.url();
+                    return {
+                        response: currentUrl,
+                        identifier: "authenticated true"
+                    };
+                }
                 return {
-                    message: "authenticated true",
-                    url: currentUrl
-                };
-              }
-            return {
-                message: "authenticated false",
-                url: null
-            };
-        } 
+                    response: null,
+                    identifier: "authenticated false"
+                };                       
+        }
     },
     Query: {
-        account: async (_: any, { id }: any) => {
-            const context = sessions[id];
+        account: async (_: any, { identifier }: any) => {
+            const context = sessions[identifier];
             if (!context) {
                 throw new Error('User not authenticated.');
             }
@@ -37,8 +48,8 @@ export const resolvers = {
             }
         },
 
-        transaction: async (_: any, { id }: any) => {
-            const context = sessions[id];
+        transaction: async (_: any, { identifier }: any) => {
+            const context = sessions[identifier];
             if (!context) {
                 throw new Error('User not authenticated.');
             }
